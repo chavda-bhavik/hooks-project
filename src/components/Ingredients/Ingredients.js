@@ -1,13 +1,26 @@
-import React, { useState,  useCallback } from 'react';
+import React, { useState,  useCallback, useReducer } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import ErrorModal from './../UI/ErrorModal'
 import Search from './Search';
 
+const ingredientReducer = (currentIngredients, action) => {
+  switch(action.type) {
+    case 'SET':
+      return action.ingredients;
+    case 'ADD':
+      return [...currentIngredients, action.ingredient]
+    case 'DELETE':
+      return currentIngredients.filter(ing => ing.id !== action.id);
+    default:
+      throw new Error('Should not get there!')
+  }
+}
 
 const Ingredients = () => {
-  const [ ingredients, setIngredients ] = useState([]);
+  const [userIngredients, dispatchIngredientAction] = useReducer(ingredientReducer, []);
+  //const [ ingredients, setIngredients ] = useState([]);
   const [ isLoading, setIsLoading ] = useState(false);
   const [ error, setError ] = useState()
 
@@ -22,14 +35,13 @@ const Ingredients = () => {
     })
     .then( data => {
       setIsLoading(false);
-      setIngredients( prevIngredients => [
-          ...prevIngredients, 
-          { 
+      dispatchIngredientAction({
+        type: 'ADD',
+        ingredient: {
             id: data.name, 
-            ...ingredient
-          }
-        ]
-      )
+            ...ingredient    
+        }
+      })
     }).catch(err => setError(err.message))
   }
 
@@ -39,15 +51,22 @@ const Ingredients = () => {
       method: 'DELETE',
     }).then( response => {
       setIsLoading(false);
-      setIngredients( prevIngredients => prevIngredients.filter( ing => ing.id !== id) )
+      dispatchIngredientAction({
+        type: 'DELETE',
+        id: id
+      })
     }).catch( err => {
       setError(err.message);
     })
   }
 
   const filterIngredientsHandler = useCallback(ings => {
-    setIngredients(ings);
+    dispatchIngredientAction({
+      type: 'SET',
+      ingredients: ings
+    })
   }, []);
+
   const clearError = () => {
     setError(null);
     setIsLoading(false);
@@ -63,7 +82,7 @@ const Ingredients = () => {
 
       <section>
         <Search onLoadIngredients={filterIngredientsHandler}/>
-        <IngredientList ingredients={ingredients} onRemoveItem={removeIngredientHandler}/>
+        <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler}/>
       </section>
     </div>
   );
