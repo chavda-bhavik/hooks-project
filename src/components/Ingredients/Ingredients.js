@@ -35,9 +35,6 @@ const httpReducer = (httpState, action) => {
 const Ingredients = () => {
   const [userIngredients, dispatchIngredient] = useReducer(ingredientReducer, []);
   const [httpState, dispatchHttp] = useReducer(httpReducer, {loading: false, error: null});
-  //const [ ingredients, setIngredients ] = useState([]);
-  // const [ isLoading, setIsLoading ] = useState(false);
-  // const [ error, setError ] = useState()
 
   const addIngredientHandler = ingredient => {
     dispatchHttp({ type: 'SEND' });
