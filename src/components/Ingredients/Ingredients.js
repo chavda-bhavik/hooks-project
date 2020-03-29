@@ -1,4 +1,4 @@
-import React, { useState,  useCallback, useReducer } from 'react';
+import React, { useCallback, useReducer, useMemo } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -36,7 +36,7 @@ const Ingredients = () => {
   const [userIngredients, dispatchIngredient] = useReducer(ingredientReducer, []);
   const [httpState, dispatchHttp] = useReducer(httpReducer, {loading: false, error: null});
 
-  const addIngredientHandler = ingredient => {
+  const addIngredientHandler = useCallback(ingredient => {
     dispatchHttp({ type: 'SEND' });
     fetch("https://react-hooks-project-f1087.firebaseio.com/ingredients.json", {
       method: 'POST',
@@ -55,9 +55,9 @@ const Ingredients = () => {
         }
       })
     }).catch(err => dispatchHttp({ type: 'ERROR', error: err.message }))
-  }
+  }, [])
 
-  const removeIngredientHandler = id => {
+  const removeIngredientHandler = useCallback(id => {
     dispatchHttp({ type: 'SEND' })
     fetch(`https://react-hooks-project-f1087.firebaseio.com/ingredients/${id}.json`, {
       method: 'DELETE',
@@ -68,7 +68,7 @@ const Ingredients = () => {
         id: id
       })
     }).catch( err => dispatchHttp({ type: 'ERROR', error: err.message }) )
-  }
+  },[])
 
   const filterIngredientsHandler = useCallback(ings => {
     dispatchIngredient({
@@ -77,9 +77,13 @@ const Ingredients = () => {
     })
   }, []);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatchHttp({ type: 'CLEAR' })
-  }
+  },[])
+
+  const ingredientList = useMemo(() => {
+    return <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler}/>
+  }, [userIngredients, removeIngredientHandler])
 
   return (
     <div className="App">
@@ -91,7 +95,7 @@ const Ingredients = () => {
 
       <section>
         <Search onLoadIngredients={filterIngredientsHandler}/>
-        <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler}/>
+        {ingredientList}
       </section>
     </div>
   );
